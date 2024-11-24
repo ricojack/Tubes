@@ -1,0 +1,78 @@
+
+BSCcopyline		macro		offset
+					ldd	{offset},x
+					std	{offset},u
+					endm
+
+BSCcopyblock	macro
+					BSCcopyline	0
+					BSCcopyline	$100
+					BSCcopyline	$200
+					BSCcopyline	$300
+					BSCcopyline	$400
+					BSCcopyline	$500
+					BSCcopyline	$600
+					BSCcopyline	$700
+					BSCcopyline	$800
+					BSCcopyline	$900
+					BSCcopyline	$A00
+					BSCcopyline	$B00
+					BSCcopyline	$C00
+					BSCcopyline	$D00
+					BSCcopyline	$E00
+					BSCcopyline	$F00
+					endm
+
+draw_blockvline	macro
+						ldd	,x		* 5 (48)
+						std	,u++	* 8
+						ldd	$02,x	* 6
+						std	,u		* 5
+						ldd	$04,x	* 6
+						std	$02,u	* 6
+						ldd	$06,x	* 6
+						std	$04,u	* 6
+						endm
+
+
+BSCcopyhline	macro
+				ldd	,x++		* 8 (64)
+				std	,u++		* 8
+				ldd	$fe,x		* 6
+				std	$fe,u		* 6
+				ldd	$1fe,x		* 9
+				std	$1fe,u		* 9
+				ldd	$2fe,x		* 9
+				std	$2fe,u		* 9
+				endm			
+
+
+* Macro to draw a single vertical block line
+* X must point to offset into the block
+* U must point to where to put it
+draw_blockhline	macro	xoff,uoff
+						ldd	{xoff},x
+						std	{uoff},u
+						endm
+
+* Macro to draw a block.
+* X must point to start of block
+* U must point to where to put it
+draw_block      macro
+				lda   #$10
+				pshs  a
+@a              ldd   ,x++		* 8 (63)
+				std   ,u		* 5
+				ldd   ,x++		* 8
+				std   2,u		* 6
+				ldd   ,x++		* 8
+				std   4,u		* 6
+				ldd   ,x++		* 8
+				std   6,u		* 6
+				leau  $100,u	* 8
+				dec   ,s
+				bne   @a
+				puls  a
+				endm
+
+

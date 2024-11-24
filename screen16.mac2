@@ -1,0 +1,182 @@
+
+BSCcopyline		macro		offset
+					ldd	{offset},x
+					std	{offset},u
+					endm
+
+BSCcopyblock	macro
+					BSCcopyline	0
+					BSCcopyline	$100
+					BSCcopyline	$200
+					BSCcopyline	$300
+					BSCcopyline	$400
+					BSCcopyline	$500
+					BSCcopyline	$600
+					BSCcopyline	$700
+					BSCcopyline	$800
+					BSCcopyline	$900
+					BSCcopyline	$A00
+					BSCcopyline	$B00
+					BSCcopyline	$C00
+					BSCcopyline	$D00
+					BSCcopyline	$E00
+					BSCcopyline	$F00
+					endm
+
+draw_blockvline	macro
+						ldd	,x		* 5 (48)
+						std	,u++	* 8
+						ldd	$02,x	* 6
+						std	,u		* 5
+						ldd	$04,x	* 6
+						std	$02,u	* 6
+						ldd	$06,x	* 6
+						std	$04,u	* 6
+						endm
+
+*						ldd	,x		* 5	(46)
+*						std	,u		* 5
+*						ldd	$02,x	* 6
+*						std	$02,u	* 6
+*						ldd	$04,x	* 6
+*						std	$02,u	* 6
+*						ldd	$06,x	* 6
+*						std	$04,u	* 6
+
+
+BSCcopyhline	macro
+				ldd	,x++		* 8 (64)
+				std	,u++		* 8
+				ldd	$fe,x		* 6
+				std	$fe,u		* 6
+				ldd	$1fe,x		* 9
+				std	$1fe,u		* 9
+				ldd	$2fe,x		* 9
+				std	$2fe,u		* 9
+				endm			
+
+
+*				ldd		-2,x	* 5 (60)
+*				std		-2,u	* 5
+*				ldd		$fe,x	* 6
+*				std		$fe,u	* 6
+*				leax	$200,x	* 8
+*				leau	$200,u	* 8
+*				ldd		-2,x	* 5
+*				std		-2,u	* 5
+*				ldd		$fe,x	* 6
+*				std		$fe,u	* 6
+
+* Macro to draw a single vertical block line
+* X must point to offset into the block
+* U must point to where to put it
+draw_blockhline	macro	xoff,uoff
+						ldd	{xoff},x
+						std	{uoff},u
+						endm
+
+* Macro to draw a block.
+* X must point to start of block
+* U must point to where to put it
+draw_block      macro
+				lda   #$10
+				pshs  a
+@a              ldd   ,x++		* 8 (63)
+				std   ,u		* 5
+				ldd   ,x++		* 8
+				std   2,u		* 6
+				ldd   ,x++		* 8
+				std   4,u		* 6
+				ldd   ,x++		* 8
+				std   6,u		* 6
+				leau  $100,u	* 8
+				dec   ,s
+				bne   @a
+				puls  a
+				endm
+
+
+*			ldd		,x		*	5 (59)
+*			std		,u		*	5
+*			ldd		2,x		*	6
+*			std		2,u		*	6
+*			ldd		4,x		*	6
+*			std		4,u		*	6
+*			ldd		6,x		*	6
+*			std		6,u		*	6
+*			leax	8,x		*	5
+*			leau	$100,u	*	8
+
+
+
+* Using direct pade
+*  5 * 19 = 95
+*  8 * 45 = 330
+* 
+* (425) * 14 = 5950 * 
+*	ldd		$0		5
+*	std		,u		5
+*	std		,y		5
+*	std		,x		5
+*	ldd		$2		5
+*	std		$100,u	8
+*	std		$100,y	8
+*	std		$100,x	8
+*	ldd		$2		5
+*	std		$200,u	8
+*	std		$200,y	8
+*	std		$200,x	8
+*	ldd		$2		5
+*	std		$300,u	8
+*	std		$300,y	8
+*	std		$300,x	8
+*	ldd		$2		5
+*	std		$400,u	8
+*	std		$400,y	8
+*	std		$400,x	8
+*	ldd		$2		5
+*	std		$500,u	8
+*	std		$500,y	8
+*	std		$500,x	8
+*	ldd		$2		5
+*	std		$600,u	8
+**	std		$600,y	8
+*	std		$600,x	8
+*	ldd		$2		5
+*	std		$700,u	8
+*	std		$700,y	8
+*	std		$700,x	8
+*	ldd		$2		5
+*	std		$800,u	8
+*	std		$800,y	8
+*	std		$800,x	8
+*	ldd		$2		5
+*	std		$900,u	8
+*	std		$900,y	8
+*	std		$900,x	8
+*	ldd		$2		5
+*	std		$a00,u	8
+*	std		$a00,y	8
+*	std		$a00,x	8
+*	ldd		$2		5
+*	std		$b00,u	8
+*	std		$b00,y	8
+*	std		$b00,x	8
+*	ldd		$2		5
+*	std		$c00,u	8
+*	std		$c00,y	8
+*	std		$c00,x	8
+*	ldd		$2		5
+*	std		$d00,u	8
+*	std		$d00,y	8
+*	std		$d00,x	8
+*	ldd		$2		5
+*	std		$e00,u	8
+*	std		$e00,y	8
+*	std		$e00,x	8
+*	ldd		$2		5
+*	std		$f00,u	8
+*	std		$f00,y	8
+*	std		$f00,x	8
+*	
+*

@@ -1,0 +1,49 @@
+1F6F: BF 21 BC       STX         $21BC  //Store in scratchpad
+1F72: F7 1F BA       STB         $1FBA
+1F75: 86 3E          LDA         #$3E   //Set Bank 2 to 0x7c000
+1F77: B7 FF A2       STA         $FFA2
+1F7A: CE 1C 20       LDU         #$1C20
+1F7D: BE 21 BC       LDX         $21BC  //Restore X
+1F80: A6 80          LDA         ,X+
+1F82: BF 21 BC       STX         $21BC
+1F85: 81 2E          CMPA        #$2E
+1F87: 10 27 00 52    LBEQ        $1FDD
+1F8B: 81 30          CMPA        #$30
+1F8D: 27 49          BEQ         $1FD8
+1F8F: 81 20          CMPA        #$20
+1F91: 27 40          BEQ         $1FD3
+1F93: 81 3E          CMPA        #$3E
+1F95: 25 04          BCS         $1F9B
+1F97: 80 40          SUBA        #$40
+1F99: 20 02          BRA         $1F9D
+1F9B: 80 16          SUBA        #$16
+1F9D: 8E 45 60       LDX         #$4560 //Text SRC in GFX
+1FA0: 30 04          LEAX        +$04,X
+1FA2: 4A             DECA
+1FA3: 26 FB          BNE         $1FA0
+1FA5: 10 BF 21 BA    STY         $21BA
+1FA9: C6 07          LDB         #$07
+1FAB: 36 04          PSHU        B
+1FAD: C6 04          LDB         #$04
+1FAF: A6 84          LDA         ,X
+1FB1: 88 FF          EORA        #$FF
+1FB3: A4 A4          ANDA        ,Y
+1FB5: A7 A4          STA         ,Y
+1FB7: A6 80          LDA         ,X+
+1FB9: 84 FF          ANDA        #$FF   //Operand overwritten with 'B'
+1FBB: AA A4          ORA         ,Y
+1FBD: A7 A0          STA         ,Y+
+1FBF: 5A             DECB
+1FC0: 26 ED          BNE         $1FAF
+1FC2: 30 89 00 9C    LEAX        +$009C,X
+1FC6: 31 A9 00 9C    LEAY        +$009C,Y
+1FCA: 37 04          PULU        B
+1FCC: 5A             DECB
+1FCD: 26 DC          BNE         $1FAB
+1FCF: 10 BE 21 BA    LDY         $21BA
+1FD3: 31 24          LEAY        +$04,Y
+1FD5: 7E 1F 7D       JMP         $1F7D
+1FD8: 86 24          LDA         #$24
+1FDA: 7E 1F 9D       JMP         $1F9D
+1FDD: 39             RTS
+
