@@ -1,0 +1,745 @@
+
+Chet Simpson wrote: 
+>Seems that the CoCo II can run in the higher speed modes, it just has 
+>problems returning back to normal speed.  This also caused problems 
+>with SOME CoCo's that could not handle the additional clock speed, 
+>but you can run it at 1.78mhz!  So here is what I have now: 
+
+
+From what I've noticed, most CoCo 2s run fine at 1.79Mhz except for the fact 
+that the screen turns into garbage.  Way back in the dark ages, I used to 
+run a BBS with a CoCo2 running at 1.79Mhz - It didn't matter that the stock 
+video went offline, I used a disto 3-in-1 card in my controller that had an 
+80 column video output that worked fine even in 1.79Mhz mode. 
+
+
+
+>A somewhat simple 4 voice digital music player that has some features 
+>taken from MOD files such as continuous play of samples at 8khz using about 
+>55% of the CPU (running at 1.78mhz).  It does have a very simple 
+... 
+>Sockmaster: 
+
+>  Know of a good way to mix 4 voices cleanly? 
+
+
+
+Quickest way I found was what I used in CoCoTracker.  Preformat the samples 
+so that the sample data is the LOWER 6 bits of each byte (rather than the 
+upper 6 bits of each byte, just LSR every byte twice).  (Preformat because 
+that way the conversion only needs to be done once and not in real time.) 
+When playing four voices, the code becomes something like this: 
+
+        LDA     [sample1] 
+*(insert volume control here) 
+        STA     <VOICE1+1 
+        LDA     [sample2] 
+*(insert volume control here) 
+        STA     <VOICE2+1 
+        LDA     [sample3] 
+*(insert volume control here) 
+        STA     <VOICE3+1 
+        LDA     [sample4] 
+*(insert volume control here) 
+VOICE3  ADDA    #0      <-self modifying immediate value 
+VOICE2  ADDA    #0      <- ' ' 
+VOICE1  ADDA    #0      <- ' ' 
+        ORA     #3      Optional, but it keeps the bitbanger from sending crap 
+        STA     65312   Output to DAC 
+
+
+Replace [sample1] with whatever method you use for reading sample data.  The 
+reason the self modifying code is there rather than just adding everything 
+straight off is because I'm assuming that volume control will be added - and 
+that modifies ACCA, which would result in messing up the volume of all the 
+previously processed voices. 
+
+
+An extra inconvenience: This method expects samples data to range from 0 to 
+63 decimal, with a ZERO volume flat line being ~31.  Simply dividing sample 
+data by two to halve the volume will work, but it will add clicks to the 
+sound.  Ideally the sample data should be recentered (add a corrective 
+value) to stay in the middle of the 0-63 range after a volume division is done. 
+
+
+And lastly, a lucky coincidence: Since the CoCo's DAC uses the upper 6 bits 
+of an 8 bit address, all the sample mixing is blessed with a free 2 bit 
+fractional value.  This makes the output more accurate than straight integer 
+mixing.  (1.5 + 1.5 = 3,  It would have been 2 if there were no fractional 
+values.)  Of course a full 8 bit DAC would be better, but that's not the 
+point here.. 
+
+
+                                         John Kowalski (Sock Master) 
+                                         http://www.axess.com/twilight/sock/ 
+
+
+For the time being I've removed the volume control and added a much 
+better mixing method. Unfortunatly, this uses a 16k lookup table in order 
+to do it (but the result is much cleaner).  I do have one that uses a 4k 
+table but it requires an additional 10 cycles for each of 3 channels 
+(30 cycles total). I use something like the following: 
+
+chan1 lda   $ffff    * Get sample byte for channel 1 
+chan2 ldb   $ffff    * Get sample byte for channel 1 
+      lda   d,x      * Get correct sample conversion 
+chan3 ldb   $ffff    * Get sample byte for channel 1 
+      lda   d,x      * Get correct sample conversion 
+chan4 ldb   $ffff    * Get sample byte for channel 1 
+      lda   d,x      * Get correct sample conversion 
+      lsla 
+      lsla 
+      sta   $ff20 
+
+
+-----
+
+> An extra inconvenience: This method expects samples data to range from 0 to 
+> 63 decimal, with a ZERO volume flat line being ~31.  Simply dividing sample 
+
+
+This has been taken care of with the method above. 
+
+
+> And lastly, a lucky coincidence: Since the CoCo's DAC uses the upper 6 bits 
+> of an 8 bit address, all the sample mixing is blessed with a free 2 bit 
+
+
+I'm going to have to try both methods to see which one gives the best 
+results.  I know that a couple of the programs that play musica files 
+through the Orch pak work this similar to the method you described. 
+
+...Chet... 
+
+
+***NOTE***  This is a fairly LONG message, if you are not interested in 
+graphics or game programming, it is safe to say that you should probably 
+just skip over to the next message. 
+
+
+I have, over the last few months, been trying to get enough information 
+together to create a 6809 game programmers handbook.  This includes GIME 
+registers, 6809/6309 instruction sets (FULL explanations), game 
+programming sample source, etc.  It is unknown when this will be ready as 
+most of the information is still in several pieces and much of it is still 
+incomplete. 
+
+
+
+> Paul M. Shoemaker wrote: 
+
+> > I was thinking about trying my hand with a hires graphics game in 
+> > assembly, but I have a very basic, introductory question.  When 
+> > maniplulating a graphics object (e.g a spaceship or man), does one 
+> > update the screen in the same fashion as the GET/PUT statements in 
+> > BASIC? 
+
+
+> > What I mean is, should I treat the object as an array of sorts, say 
+> > 20X20 pixels or whatever), and then systematically plot and erase them 
+> > on the screen in order to move the object?  Or is there a faster, 
+> > easier way?  Thanks! 
+
+
+
+[This information is sketchy at best as I put it together in somewhat of a 
+hurry.  If any of it is unclear or difficult to understand (which 
+sometimes my writing can be), let me know and I will try and expand on the 
+explanation] 
+
+Game programming rules: 
+
+
+#1  if it is to be faster, it won't be easier. 
+#2  There is no single best way to do something. 
+#3  You need more than 640k to multitask 
+#4  A 20mb hard disk will never be too small. 
+
+
+This is, at best, a somewhat difficult question to answer.  Mainly because 
+there are several different methods that can be used to accomplish this. 
+Plus your question can be taken in couple of different contexts... 
+
+
+1:  How do I draw the sprite to the screen. 
+2:  How do I move sprites around on the screen. 
+
+
+I'll try and answer both of those questions in this message. 
+
+
+To try and keep this simple, we will start with what you could do with the 
+BASIC get/put functions and build from there.  We will use 3 objects 
+(player, enemy1 and enemy2) for this example: 
+
+
+[Pseudo "c" code] 
+
+
+/* 
+    We initially save the area where the enemies and player are at 
+    so that we do not have to check if they have alreay been saved 
+    when we "restore" those areas 
+*/ 
+       Save_enemy1_area(); 
+       Save_enemy2_area(); 
+       Save_player_area(); 
+
+
+       Main_loop 
+            { 
+            Restore_enemy1();      /* Restore the area under sprites */ 
+            Restore_enemy2();      /* last position */ 
+            Restore_player(); 
+            Move_player();         /* move the player */ 
+            Move_enemy1();          /* Move the enemy */ 
+            Move_enemy2();          /* Move the enemy */ 
+            Save_enemy1_area();    /* Save the area under sprites current 
+            Save_enemy2_area();    /* position */ 
+            Save_player_area(); 
+            Draw_enemy1();         /* Draw the sprites under current 
+            Draw_enemy2();         /* position */ 
+            Draw_player(); 
+            } 
+
+
+In assembler: 
+
+
+    jsr   save_enemy1 
+    jsr   save_enemy2 
+    jsr   save_player 
+loop 
+    jsr   move_player 
+    jsr   move_enemy1 
+    jsr   move_enemy2 
+    jsr   save_enemy1_area 
+    jsr   save_enemy2_area 
+    jsr   save_player_area 
+    jsr   draw_enemy1 
+    jsr   draw_enemy2 
+    jsr   draw_player 
+    tst   exit 
+    beq   loop 
+
+
+2 things that you have probably already noticed is that 1) this is limited 
+to 3 sprites (enemy1, enemy2 and player) and 2) that if you actually 
+implement something like this, you are bound to get what is called 
+'flicker' when updating the screen.  The original NES was limited in the 
+number of sprites it could display at a time.  If you tried displaying 
+MORE than what it was capable of doing, some of those sprites would 
+flicker. 
+
+
+Problem number 1 is usually up to the programmer to decide on how to 
+handle it.  You may have a set number of object (5 or 6) so you can 
+probably get away with doing them individuallly (not the cleanest way of 
+doing it, but it does work) or you may have a list of them that need to be 
+managed.  We'll keep those solutions for later messages (at least for 
+now), but it would look something like this: 
+
+
+       Save_sprite_areas(); 
+
+
+       Main_loop 
+            { 
+            Restore_sprites();     /* Restore the area under sprites */ 
+            Move_player();         /* move the player */ 
+            Move_enemies();        /* Move the enemy */ 
+            Save_sprite_area();    /* Save the area under sprites 
+            Draw_sprites();        /* Draw the sprites */ 
+            } 
+
+
+Now to combat problem 2 (flicker) we will use something called "page 
+flipping". Essentially what this means is that you have two graphics pages 
+(well call them page0 and page1) that you flip between when you draw a 
+screen. 
+
+
+The general flow of this goes like: 
+
+
+       Save_sprite_areas(); 
+
+
+       Main_loop 
+            { 
+            Restore_sprites();     /* Restore the area under sprites */ 
+            Move_player();         /* move the player */ 
+            Move_enemies();        /* Move the enemy */ 
+            Save_sprite_area();    /* Save the area under sprites */ 
+            Draw_sprites();        /* Draw the sprites */ 
+            Display_page();        /* Display our new page */ 
+            PageFlip();            /* flip the pages */ 
+            } 
+
+
+Now, with this method some the restore, save and draw routines need to 
+access information in page flip so they know which page to draw to. 
+
+
+Now on to blitting sprites.... 
+
+
+[This assumes a 320x192 16 color screen] 
+
+
+On of the common characteristics of a sprite is transparency.  Transparent 
+areas of a sprite are areas which are NOT copies to the display when a blit 
+is done.  This is how characters (the main player) and objects are placed 
+on the display without destroying the area around it. 
+
+
+So, lets look at how a sprite is made up: 
+
+
+(0 = blank or transparent pixels, 1 = solid pixels). 
+
+
+  0000000000000000 
+  0000000000000000 
+  0000000000000000 
+  0000000000000000 
+  0000000110000000 
+  0000011111100000 
+  0000011111100000 
+  0000111111110000 
+  0000111111110000 
+  0000011111100000 
+  0000011111100000 
+  0000000110000000 
+  0000000000000000 
+  0000000000000000 
+  0000000000000000 
+  0000000000000000 
+
+
+When blitting the sprite to the screen, each time the blit routine 
+encounters the pixel 0, it skips (without doing anything to the screen) and 
+goes on to the next one. 
+
+
+So if you were blitting the above sprite onto the following region... 
+
+
+  2222222222222222 
+  2222222222222222 
+  2222222222222222 
+  2222222222222222 
+  2222222222222222 
+  2222222222222222 
+  2222222222222222 
+  2222222222222222 
+  2222222222222222 
+  2222222222222222 
+  2222222222222222 
+  2222222222222222 
+  2222222222222222 
+  2222222222222222 
+  2222222222222222 
+  2222222222222222 
+
+
+You would end up with.... 
+
+
+  2222222222222222 
+  2222222222222222 
+  2222222222222222 
+  2222222222222222 
+  2222222112222222 
+  2222211111122222 
+  2222211111122222 
+  2222111111112222 
+  2222111111112222 
+  2222211111122222 
+  2222211111122222 
+  2222222112222222 
+  2222222222222222 
+  2222222222222222 
+  2222222222222222 
+  2222222222222222 
+
+
+Normally, if you were working a pixel at a time, you could use what it 
+called the painters algorithm.  This is implemented by checking each pixel 
+of the sprite to see if it is transparent before you put it to the screen. 
+Unfortunatly, this is SLOW, even more so because on the CoCo III, each byte 
+represents 2 pixels. 
+
+
+So, how can you overcome this?  By using what is called a bitmask.  What 
+this does is it creates another image of the sprite but only in 2 colors. 
+1 color indicated a transparent pixel while the other indicates one to 
+blit. 
+
+
+      bitmask            sprite 
+
+
+  TTTTTTTTTTTTTTTT  0000000000000000 
+  TTTTTTTTTTTTTTTT  0000000000000000 
+  TTTTTTTTTTTTTTTT  0000000000000000 
+  TTTTTTTTTTTTTTTT  0000000000000000 
+  TTTTTTT..TTTTTTT  0000000110000000 
+  TTTTT......TTTTT  0000011111100000 
+  TTTTT......TTTTT  0000011111100000 
+  TTTT........TTTT  0000111111110000 
+  TTTT........TTTT  0000111111110000 
+  TTTTT......TTTTT  0000011111100000 
+  TTTTT......TTTTT  0000011111100000 
+  TTTTTTT..TTTTTTT  0000000110000000 
+  TTTTTTTTTTTTTTTT  0000000000000000 
+  TTTTTTTTTTTTTTTT  0000000000000000 
+  TTTTTTTTTTTTTTTT  0000000000000000 
+  TTTTTTTTTTTTTTTT  0000000000000000 
+
+
+On a 16 color display, T would become a value $f (15) and . would become $0 
+(0).  In binary form they become: 
+
+
+  $FFFF $FFFF $FFFF $FFFF   $0000 $0000 $0000 $0000 
+  $FFFF $FFFF $FFFF $FFFF   $0000 $0000 $0000 $0000 
+  $FFFF $FFFF $FFFF $FFFF   $0000 $0000 $0000 $0000 
+  $FFFF $FFFF $FFFF $FFFF   $0000 $0000 $0000 $0000 
+  $FFFF $FFF0 $0FFF $FFFF   $0000 $0001 $1000 $0000 
+  $FFFF $F000 $000F $FFFF   $0000 $0111 $1110 $0000 
+  $FFFF $F000 $000F $FFFF   $0000 $0111 $1110 $0000 
+  $FFFF $0000 $0000 $FFFF   $0000 $1111 $1111 $0000 
+  $FFFF $0000 $0000 $FFFF   $0000 $1111 $1111 $0000 
+  $FFFF $F000 $000F $FFFF   $0000 $0111 $1110 $0000 
+  $FFFF $F000 $000F $FFFF   $0000 $0111 $1110 $0000 
+  $FFFF $FFF0 $0FFF $FFFF   $0000 $0001 $1000 $0000 
+  $FFFF $FFFF $FFFF $FFFF   $0000 $0000 $0000 $0000 
+  $FFFF $FFFF $FFFF $FFFF   $0000 $0000 $0000 $0000 
+  $FFFF $FFFF $FFFF $FFFF   $0000 $0000 $0000 $0000 
+  $FFFF $FFFF $FFFF $FFFF   $0000 $0000 $0000 $0000 
+
+
+So how do you take the bitmask and the sprite and put it on the screen? 
+First we take a byte from the screen and AND it with a byte from the 
+bitmask.  This will keep all pixels that we are not going to overwrite. 
+We then take a byte from the sprite data and OR it with the screen data 
+[that we did the AND operation on].  this will mix the sprite and screen 
+data together. We no put the byte back onto the screen.....in assembly it 
+would look something like: 
+
+
+* Enter with: 
+*   X    = sprite 
+*   U    = mask 
+*   Y    = screen 
+blit   ldd  #$10    * Height is 16 
+       pshs a 
+       bra  blit 20 
+blit10 ldb  #$8     * Width is 16 pixels (8 bytes) 
+       leay 152,y   * Go down a line 
+blit20 lda  ,y      * Get a byte from the screen 
+       anda ,u+     * AND it with the mask 
+       ora  ,x+     * OR in the sprite data 
+       sta  ,y+     * store it back to the screen 
+       decb         * Are we done with this line? 
+       bne  blit20  * No 
+       dec  ,s      * Line finished, but are we done yet? 
+       bne  blit10  * No 
+       pop  a,pc    * Yes, clean up and return 
+
+
+We can go one step in optimizing if we mix the mask data in with the 
+sprite data.  Ie byte 1 = mask, byte 2 = sprite, byte 3 = mask, byte 4 = 
+sprite and so on... 
+
+
+* Enter with: 
+*   X    = sprite and mask 
+*   U    = screen 
+blit   ldd  #$10    * Height is 16 
+       pshs a 
+       bra  blit 20 
+blit10 ldb  #$8     * Width is 16 pixels (8 bytes) 
+       leau 152,u   * Go down a line 
+blit20 lda  ,u      * Get a byte from the screen 
+       anda ,x+     * AND it with the mask 
+       ora  ,x+     * OR in the sprite data 
+       sta  ,u+     * store it back to the screen 
+       decb         * Are we done with this line? 
+       bne  blit20  * No 
+       dec  ,s      * Line finished, but are we done yet? 
+       bne  blit10  * No 
+       pop  a,pc    * Yes, clean up and return 
+
+
+It is important that in the mask, all transparent colors are represented by 
+$f (15) and all used colors are represented by $0.  The reason is that when 
+you AND the screen data with the mask the value $f (15) retains those bits 
+from the screen while $0 throws them away. 
+
+
+Welp, gotta run......this is far from being a complete (or well thought 
+out) explanation, but it should get you started.
+
+
+
+Nickolas Marentes wrote: 
+>I would love to write more games but I suspect that my efforts would be 
+>fruitless. 
+
+>Several years ago I wrote a shareware game called Cosmic Ambush (I will 
+>upload when I get some time) I have yet to recieve a cent from it. 
+
+
+>I don't expect to make a living out of the CoCo but It's nice to have some 
+>recognition/reward for the hours/days/weeks/months spent developing. 
+
+
+>Although games is my specialty, I understand that the CoCo has a low games 
+>playing audience. I would be interested to know what sort of programs CoCo 
+>users want and would be interested in buying. 
+
+
+
+Hi.  Good to see some more well known names popping up here again. 
+
+My impression is that the 'market' gets worse with every year, probably a 
+20% drop each year.  I've done some shareware, and it's really starting to 
+show.  My Twilight Terminal which is a few years old now has a good number 
+of registered users, but a more recent effort - an Amiga 4 voice MOD file 
+music player has only turned up 3 or 4 so far. 
+
+
+It's a shame, though.  I've had some ideas to pull off all kinds of tricks 
+with the video, but there's not quite enough incentive to make it worth the 
+trouble.  Two tricks that come to mind are : 
+A) fast (60hz) all directional scrolling of the screen best suited for a 
+platform game (a la Mario) without the need to redraw the whole screen each 
+frame yet still be able to scroll in any given direction indefinately 
+(without running out of memory). 
+B) fast (60hz) multilayer horizontal scrolling of the screen (ie: Foreground 
+scrolls at one speed, background(s) scroll at other speeds) best suited for 
+a side scroller (a la Moon Patrol) without the need to redraw the whole 
+screen each frame.  And you can put 'sprites' spanning the different 
+vertical layers without them getting messed up! 
+
+
+There is tremendous untapped potential in the CoCo, and I would REALLY like 
+to see it used.  The above methods are video tricks done by playing with the 
+GIME registers with some strategically written routines run by interrupts - 
+They end up taking up much less CPU power than traditional methods, hence 
+making it possible for games to run at 60 frames per second with full screen 
+animation. 
+
+
+My impression is that if someone makes something truly amazing - something 
+never thought possible, or something that's never been done before, then the 
+people will notice and hopefully try to maintain the author's incentive to 
+make more. 
+
+
+          
+------
+WillMcD96 wrote: 
+>How are the clock cycles in comparison of the ones posted by motorola? 
+>I propose a timing routine to test, I suspect instruction cycles are wrong. 
+
+>anyone have any secret info on what I am talking about? 
+
+
+
+The cycle chart printed by Motorola is 100% correct.   CoCo hardware does 
+not implement any wait states either.  Why do you suspect cycle usage is wrong? 
+
+
+>Is there a fetch/pre-fetch  delay? how about Bus delays? etc. (this is out of 
+>my league but fascinates me) 
+
+>A timing routine would be based on how many (unrolled)NOP'S could be done in a 
+>row using the external timer while all interupts are disabled, then based on 
+>the results checking each 6809 instruction and then combination of 
+>instructions. 
+
+
+>it's just a theory. 
+
+
+
+After completing an instruction, the 6809 automatically fetches the next 
+byte in memory so that it can start processing the next instruction. 
+Back in the 'old' days, memory was faster than the CPU, so CPUs were 
+generally designed to use the bus as often as possible - just in case the 
+pre-fetched data will be needed in the next CPU cycle.  All the cycle usage 
+by the CPU is reflected in the charts from Motorola, so there are no hidden 
+'extra' cycles, and there are no wait states when using the bus.  Every 
+opcode always takes exactly the same number of cycles to execute each time. 
+
+If you still want to measure cycles. This is a very good way: 
+AGAIN   SYNC            ;sync with video screen 
+        LDD     #1048   ;delay value 
+WAIT    SUBD    #1      ;decrement delay counter 
+        BNE     WAIT    ;we're waiting for video to come out of the border 
+        LDA     #52     ;the color yellow 
+        STA     65456   ;update palette register #0 
+        >insert CPU opcodes to measure< 
+        LDA     #0      ;the color black 
+        STA     65456   ;update palette register #0 
+        BRA     AGAIN   ;do it all again to sustain effect on screen 
+
+
+This only works on the CoCo3.  What you'll see (depending with video mode 
+you're already in) either two palette glitches, or a streak of color on the 
+screen. 
+
+
+When the CPU is running at 1Mhz (STA 65496), the width of ONE CPU CYCLE is 
+the width of the text in the 32 column text screen.  At 2Mhz (STA 65497) the 
+width of one CPU cycle is the width of the text in the 80 column text screen. 
+
+
+Run the program when *no* opcodes are inserted in the specified area, make 
+sure you see the palette updates on the screen.  If not, you can adjust the 
+number 1048 to tune the video timing until you do. 
+When you see the two palette glitches, or the streak of color, measure how 
+wide is it.  (It takes 7 CPU cycles to reset the palette, so you get a width 
+of 7 even though no opcode is being measured yet.) 
+
+
+Then try running it again with various CPU opcodes inserted in the routine. 
+The number of cycles an opcode uses is the width of the palettes displayed 
+minus the width they were with no opcode being measured - so,  x-7 if I'm 
+guessing right. 
+
+-----
+
+
+
+This is a little odd, but isn't it in that 6309 text file from Alan DeKok 
+that you did some editing on? 
+You can see a pretty complete chart of 6809 cycle usage from the 4Mhz 
+accelerator section of my web page.  The tables themselves have been borred 
+from that text file and modified to include 'accelerated' cycles.  (I also 
+found some errors in the original 6309 cycle counts and corrected them.) 
+http://www.axess.com/twilight/sock/cocofile/4mzcycle.html 
+
+It lists the cycle counts of A)6809, B)6309, C)"6309 DX2".  You can ignore 
+the accelerator cycle counts, but A&B are useful. 
+
+
+Anyways, from the Motorola 6809 data sheets: 
++RTI takes 6 cycles for a FIRQ, 15 cycles for an IRQ. 
++FIRQ processing takes 10 cycles, IRQ processing takes 19 cycles. 
++In the case of the CoCo3, since the 'real' IRQ/FIRQ vectors don't go 
+directly to progran code, an extra step is required: The JMP xxxx in the 
+$FExx range.  Adding another 3 cycles for a direct JMP, 4 cycles for an 
+extended JMP or as is stupidly built into SDECB 9 cycles for a LBRA + JMP 
+combination. 
+
+
+Assuming the $FExx vectors are replaced with extended JMPs, total overhead for: 
+IRQ is 38 cycles. 
+FIRQ is 20 cycles. 
+(Subtract one cycle if you use a direct page JMP) 
+
+
+And that's just to do nothing, not even acknowlegde the interrupt to the GIME! 
+
+
+                               
+-----
+
+At 08:44 PM 26/01/03 -0800, Robert Emery wrote: 
+
+
+>Any at all? I see that someone's working on a Tomy 
+>Tutor emulator for the C64, which is what got me 
+>wondering. 
+
+>What systems could be emulated on the CoCo? A2600, 
+>NES, Tandy pocket PC's,...? 
+
+
+
+The general answer? 
+The CoCo can emulate anything that is: 
+-Generally about 5+ times slower in CPU performance. 
+-Has hardware specifications similar or lower than the CoCo's own. 
+
+When you work it out, the list of things becomes very small. 
+Something like a Tomy Tutor is probably about it, or maybe that cool Seiko 
+computer watch from around 1982. 
+
+
+Actually, I've looked into the idea of emulating something on the CoCo3 for 
+quite a while, and I actually found one exception to the rules. 
+
+
+** The GCE Vectrex ** 
+
+
+This system was powered by a 6809 running at 1.5Mhz and featured a vector 
+graphics display.   By the normal rules of emulation, we couldn't hope to 
+emulate this system, but because of a series of happy coincidences, I think 
+the CoCo3 would be able to pull it off. 
+
+
+1 - It's the same CPU!  We could actually run Vectrex code directly, and the 
+CoCo3 runs slightly faster, giving us some leftover CPU time to emulate 
+Vectrex hardware that is lacking on the CoCo (sound and graphics). 
+
+
+2 - It appears that Vectrex games used system Calls (to the Vectrex's 
+built-in ROM) to draw graphics, play sound and scan controllers/buttons. 
+
+
+3 - All games and ROMs are small enough to fit in the CoCo's address space, 
+and there are no major conflicts in address space.  (That is, we could load 
+a game ROM into the same address that it expects to execute from.) 
+
+
+4 - (A bonus) All Vectrex games and ROMs are legally free to use! 
+
+
+Okay, you guys might still be wondering - But that still doesn't mean that 
+the games will execute properly under different hardware, especially since 
+the CoCo doesn't have a vector graphics display! 
+
+
+True.  Actually, the big happy break in our case is the Vectrex's system ROM. 
+If we were to make a Vectrex emulator, we wouldn't actually use the 
+Vectrex's built-in ROM routines as-is.  What would be required would be a 
+rewrite - to rewrite it so that it still performed the same functions as it 
+did originally, but using the CoCo 3's hardware instead. 
+
+
+Since Vectrex games used these system subroutines, if we replaced them with 
+an equivalent functioning CoCo version, it should make all those Vectrex 
+games run on the CoCo. 
+
+
+Even the way the vector graphics work seem to work in our favor..  The 
+Vectrex had very simple vector hardware and the bulk of the work was done by 
+the CPU.  I'm guessing that by replacing the original vector routines with 
+bitmap graphic line-drawing routines, we wouldn't necessarily even slow them 
+down. 
+
+
+So, essentially, this would be a high-level-emulator.  We wouldn't be 
+emulating a Vectrex at the hardware level, but at the software level instead. 
+If we duplicate all the system calls, the existing Vectrex software library 
+wouldn't know any different and simply run the same way it expects to had it 
+been running on actual Vectrex hardware. 
+
+
+Other people have already disassembled the Vectrex system ROMs, so all the 
+subroutine entry points and functions are already known. 
+
+
+So, is anyone interested in a Vectrex emulator for the CoCo 3? 
+
+
+                                         John Kowalski (Sock Master) 
+                          
+-----
+

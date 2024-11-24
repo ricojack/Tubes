@@ -1,0 +1,96 @@
+Rainbow IDE
+(C) 2006 by Taylor Software, All Rights Reserved
+
+PROJECT TITLE: Tubes
+
+imgtool create coco_jvc_rsdos "Disks\TUBEDISKvA08.dsk" --tracks=35 --heads=1 --sectors=18
+
+skipping 'input.asm' because no output object type was specified
+skipping 'tubes.inc' because no output object type was specified
+cm loader.asm -q -de=Temp\errors.dat -bin -o=Files\gfxload.bin
+
+
+imgtool put coco_jvc_rsdos "Disks\TUBEDISKvA08.dsk" "Files\gfxload.bin" "gfxload.bin" --ftype=binary --ascii=binary
+Putting file 'Files\gfxload.bin'...
+
+skipping 'sprites.asm' because no output object type was specified
+skipping 'utils.asm' because no output object type was specified
+skipping 'system.asm' because no output object type was specified
+skipping 'check.asm' because no output object type was specified
+
+WARNING:  M.E.S.S. Imgtool.exe does not currently convert ASCII BASIC to tokenized BASIC
+imgtool put coco_jvc_rsdos "Disks\TUBEDISKvA08.dsk" "Files\tubes.bas" "tubes.bas" --ftype=basic --ascii=ascii --filter=ascii
+Putting file 'Files\tubes.bas'...
+
+cm memfill.asm -q -de=Temp\errors.dat -bin -o=Files\tubes.bin
+
+
+[Symbol Doesn't Exist] ERROR in line 121 of 'memfill.asm'
+{ jsr drawleftblk}
+
+
+imgtool put coco_jvc_rsdos "Disks\TUBEDISKvA08.dsk" "Files\tubes.bin" "tubes.bin" --ftype=binary --ascii=binary
+Putting file 'Files\tubes.bin'...
+
+cm testfirq.asm -q -de=Temp\errors.dat -bin -o=Files\tf.bin
+
+
+imgtool put coco_jvc_rsdos "Disks\TUBEDISKvA08.dsk" "Files\tf.bin" "tf.bin" --ftype=binary --ascii=binary
+Putting file 'Files\tf.bin'...
+
+cm testsnd.asm -q -de=Temp\errors.dat -bin -o=Files\snd.bin
+
+
+imgtool put coco_jvc_rsdos "Disks\TUBEDISKvA08.dsk" "Files\snd.bin" "snd.bin" --ftype=binary --ascii=binary
+Putting file 'Files\snd.bin'...
+
+skipping 'sndfirq.asm' because no output object type was specified
+cm sndfirq2.asm -q -de=Temp\errors.dat -nr -o=Files\firq2.bin
+
+
+imgtool put coco_jvc_rsdos "Disks\TUBEDISKvA08.dsk" "Files\firq2.bin" "firq2.bin" --ftype=binary --ascii=binary
+Putting file 'Files\firq2.bin'...
+
+skipping 'sound.asm' because no output object type was specified
+cm sndload.asm -q -de=Temp\errors.dat -bin -o=Files\fx.bin
+
+
+imgtool put coco_jvc_rsdos "Disks\TUBEDISKvA08.dsk" "Files\fx.bin" "fx.bin" --ftype=binary --ascii=binary
+Putting file 'Files\fx.bin'...
+
+skipping 'drawtext.asm' because no output object type was specified
+cm fontload.asm -q -de=Temp\errors.dat -bin -o=Files\fonts.bin
+
+
+imgtool put coco_jvc_rsdos "Disks\TUBEDISKvA08.dsk" "Files\fonts.bin" "fonts.bin" --ftype=binary --ascii=binary
+Putting file 'Files\fonts.bin'...
+
+skipping 'score.asm' because no output object type was specified
+cm scrnload1.asm -q -de=Temp\errors.dat -bin -o=Files\gfx1.bin
+
+
+imgtool put coco_jvc_rsdos "Disks\TUBEDISKvA08.dsk" "Files\gfx1.bin" "gfx1.bin" --ftype=binary --ascii=binary
+Putting file 'Files\gfx1.bin'...
+
+cm scrnload2.asm -q -de=Temp\errors.dat -bin -o=Files\gfx2.bin
+
+
+imgtool put coco_jvc_rsdos "Disks\TUBEDISKvA08.dsk" "Files\gfx2.bin" "gfx2.bin" --ftype=binary --ascii=binary
+Putting file 'Files\gfx2.bin'...
+
+cm scrnload3.asm -q -de=Temp\errors.dat -bin -o=Files\gfx3.bin
+
+
+imgtool put coco_jvc_rsdos "Disks\TUBEDISKvA08.dsk" "Files\gfx3.bin" "gfx3.bin" --ftype=binary --ascii=binary
+Putting file 'Files\gfx3.bin'...
+
+cm scrnload4.asm -q -de=Temp\errors.dat -bin -o=Files\gfx4.bin
+
+
+imgtool put coco_jvc_rsdos "Disks\TUBEDISKvA08.dsk" "Files\gfx4.bin" "gfx4.bin" --ftype=binary --ascii=binary
+Putting file 'Files\gfx4.bin'...
+
+skipping 'level.asm' because no output object type was specified
+
+* BUILD COMPLETE *
+

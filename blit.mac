@@ -1,0 +1,99 @@
+
+
+blitbyte	macro
+			lda	b,u
+			anda	,x+
+			ora	,x+
+			sta	b,u
+			incb
+			endm
+
+blitbyte2	macro
+			lda	,x+
+			sta	b,u
+			incb
+			endm
+
+
+blitline	macro
+			blitbyte
+			blitbyte
+			blitbyte
+			blitbyte
+			blitbyte
+			blitbyte
+			blitbyte
+			lda	b,u
+			anda	,x+
+			ora	,x+
+			sta	b,u
+			endm
+
+
+
+restbyte macro
+			lda	b,u
+			sta	b,x
+			incb
+			endm
+
+restline	macro
+			restbyte
+			restbyte
+			restbyte
+			restbyte
+			restbyte
+			restbyte
+			restbyte
+			lda	b,u
+			sta	b,x
+			leax	$100,x
+			leau	$100,u
+			subb	#$07
+;			ldb	,s
+			endm
+
+blit_soline	macro
+			ldb	blit_offset
+			blitbyte2
+			blitbyte2
+			blitbyte2
+			blitbyte2
+			blitbyte2
+			blitbyte2
+			blitbyte2
+			lda	,x+
+			sta	b,u
+			endm
+
+
+colid_byte	macro	{label}
+			lda	b,u
+			anda	,x+
+			cmpa	,x+
+			bne	{label}
+			incb
+			endm
+
+colid_line	macro	{label}
+			colid_byte	{label}
+			incb
+			colid_byte	{label}
+			incb
+			colid_byte	{label}
+			incb
+			colid_byte	{label}
+			incb
+			colid_byte	{label}
+			incb
+			colid_byte	{label}
+			incb
+			colid_byte	{label}
+			incb
+			colid_byte	{label}
+			incb
+			subb	#$08
+			endm
+
+
+
