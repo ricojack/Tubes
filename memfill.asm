@@ -134,7 +134,8 @@ start	tfr	cc,a
 	lda	playing_sound
 	bne	@chkflg
 	jsr	pia_dis_sound
-@chkflg	lda	game_over_flag
+@chkflg	clr	$ff9a	; DEBUG - clear border
+	lda	game_over_flag
 	bne	@gmover
 	lda	level_done
 	beq	@wsync
@@ -446,6 +447,7 @@ __NON_TEST__ equ 1
 	include level.asm
 	org	spritetable
 spritestart	includebin sprites64.raw
-chgsprstart	includebin chg_sprites.raw
+;chgsprstart	includebin chg_sprites.raw
+chgsprstart	includebin alt.raw
 
 	end	start

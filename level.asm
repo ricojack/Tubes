@@ -2,38 +2,38 @@
 levelsize_c	equ	5
 max_level_c	equ	9
 leveldata	fcb	$00,$10	;blocks to clear
-		fcb	$07	;drop speed
-		fcb	$1c	;hang time
+		fcb	$02	;drop speed ... was 7
+		fcb	$10	;hang time ... was 1c
 		fcb	11	;random seed
 		fcb	$00,$20	;2
 		fcb	$05
 		fcb	$18
 		fcb	23
-		fcb	$00,$40	;3
+		fcb	$00,$20	;3
 		fcb	$04
 		fcb	$18
 		fcb	35
-		fcb	$00,$80	;4
+		fcb	$00,$20	;4
 		fcb	$03
 		fcb	$14
 		fcb	47
-		fcb	$01,$50	;5
+		fcb	$00,$20	;5
 		fcb	$02
 		fcb	$14
 		fcb	47
-		fcb	$02,$25 ;6
+		fcb	$00,$30 ;6
 		fcb	$02
 		fcb	$12
 		fcb	47
-		fcb	$03,$00	;7
+		fcb	$00,$30	;7
 		fcb	$01
 		fcb	$12
 		fcb	47
-		fcb	$04,$00	;8
+		fcb	$00,$30	;8
 		fcb	$01
 		fcb	$10
 		fcb	47
-		fcb	$06,$00	;9
+		fcb	$00,$40	;9
 		fcb	$01
 		fcb	$10
 		fcb	47

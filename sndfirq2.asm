@@ -4,6 +4,7 @@ bra_operand	equ	$20
 brn_operand	equ	$21
 SOUND_MMU	equ	$ffa3
 SOUND_PREFIX	equ	$60	;sounds are at $6000-$7fff
+__BG_PAL_SLOT	equ	$ffb4
 
 firqvec	fcb	$fe,start	;odd, but works around assembler.
 sndinfo	fcb	$fe,fxblkcur
@@ -11,7 +12,7 @@ sndena	fcb	$fe,start
 sndoff	fcb	$fe,_smpl+1
 in_effect fcb	$00
 start	bra	@colchg		;color change only firq
-	inc	$ffb4
+	tst	__BG_PAL_SLOT		; change back to 'inc' if the color change doesn't work right
 	sta	<@z+1		; (001:+4) save ACCA
 _smpl	lda	sample		; (001:+5) get sound byte
 	sta	PIA2			; (001:+5) send sound out
@@ -41,7 +42,7 @@ _smpl	lda	sample		; (001:+5) get sound byte
 	dec	<start			; change brn to bra
 	rti
 ;
-@colchg	inc	$ffb4
+@colchg	tst	__BG_PAL_SLOT			; change back to 'inc' if color change doesn't work right
 	bita	$ff93
 	tst	in_effect
 	beq	@ret

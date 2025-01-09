@@ -1,10 +1,12 @@
 ;NOTE: add in the 'cursor' timer
 
-vsyncirq lda	$ff92
-	clr	$ffb4
+vsyncirq lda #$24	; bright red
+	sta $ff9a	; border - DEBUG - used to check idle time
+	;clr	$ffb4	; DEBUG - must reenable for the bright bg color !! reset the multi color bg.
 ;	lda	$ff02	;clr int? 
 ;	lda	$ff92	;clr gime int
-	anda	#$08
+	lda	$ff92
+	anda	#$08	; exit immediately if not vsync? RC 2024
 	beq	@ret
 	dec	p1_irq_val
 	bne	@p2
@@ -54,7 +56,8 @@ p2_irq_max	rmb 1
 p2_irq_sv	rmb 2
 irq_cyc_ptr	rmb 2
 irq_cyc_time	rmb 1
-irq_cyc_start	fcb $01,$08,$09,$0f,$39,$0f,$09,$08,$01,$04,$20,$24,$27,$3c,$27,$24,$20,$04,$00
+irq_cyc_start	fcb $04,$20,$24,$24,$20,$04,$00
+;irq_cyc_start	fcb $01,$08,$09,$0f,$39,$0f,$09,$08,$01,$04,$20,$24,$27,$3c,$27,$24,$20,$04,$00
 irq_cyc_max	equ 15	; 4 cycles a second
 p1_mv_max	rmb 1
 p1_mv_chk	rmb 1

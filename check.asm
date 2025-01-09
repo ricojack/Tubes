@@ -5,6 +5,7 @@ CHECKBLOCKS inc	check_active
 	
 p1_check_lines	lda	check_active
 	beq	@ret
+	jsr	check_bg_color	;comment for blank bg
 	jsr	clearinfodata
 	ldx	#leftscrndata
 	ldy	#leftinfodata
@@ -30,6 +31,40 @@ check_active	rmb 1
 st_drop	rmb	1
 
 
+check_bg_color	lda #GREEN_BG_COLOR
+	sta	BORDER_REG
+;	sta	BG_PALETTE_SLOT	; debug - show where this is being called
+	sta	@upd_bg+1
+	ldx	#(leftscrndata+RED_LINE_IDX)
+	ldd	,X
+	addd	2,X
+	addd	4,X
+	beq	@chk_orng
+	lda	#RED_BG_COLOR
+	sta	@upd_bg+1
+	bra	@upd_bg
+@chk_orng	ldx	#(leftscrndata+ORANGE_LINE_IDX)
+	ldd	,X
+	addd	2,X
+	addd	4,X
+	beq	@chk_ylw
+	lda	#ORANGE_BG_COLOR
+	sta	@upd_bg+1
+	bra	@upd_bg
+@chk_ylw	ldx	#(leftscrndata+YELLOW_LINE_IDX)
+	ldd	,X
+	addd	2,X
+	addd	4,X
+	beq	@upd_bg
+	lda	#YELLOW_BG_COLOR
+	sta	@upd_bg+1
+@upd_bg	lda	#$3f	; bright white, to show if something wrong!! s/b overwritten
+	sta	BG_PALETTE_SLOT
+	rts
+	
+	
+	
+		; 
 ;Called from 'p1_game_over'
 clear_all_p1_blocks clr	check_active	;probably not needed.
 ;	lda	#$0f
@@ -335,7 +370,7 @@ check_left_side	clrb
 	puls a,b
 @next	ldb curr_start_pt
 	cmpb #13
-	bge @done
+	bge @done		; TODO - could do a countdown, save a couple of cycles
 	stb curr_row		; curr_row + 1 == curr_start_pt
 	incb
 	stb curr_start_pt

@@ -163,6 +163,7 @@ p1_game_flag	rmb 1
 p1_level_flag	rmb 1
 
 p1_game_over jsr clear_all_p1_blocks
+	clr	BG_PALETTE_SLOT
 	clr	p1_game_flag
 	rts
 
@@ -182,11 +183,14 @@ p1_drop_start	orcc #$10
 ;	lsla
 ;	lsla
 	sta	p1_irq_val
-	lda	p1_last_col	;
+	lda	p1_last_col	; orig code - moved the drop right to left
 	inca
 	cmpa	#6
 	blt	@nr
 	clra
+;
+;	lda	#2	; test code - should make a constant - but drop in column 2 all the time
+	; possible change - drop in lowest column - but larger code changes
 @nr	sta	p1_dropidx
 	sta	p1_last_col
 	ldy	#screenstart	;calculate curpos
