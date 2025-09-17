@@ -78,6 +78,17 @@ absstart_c	equ 62
 
 lastrow_index_c	equ 72
 well_width_c	equ 6
+RED_LINE_IDX	equ well_width_c*2
+ORANGE_LINE_IDX	equ well_width_c*6
+YELLOW_LINE_IDX	equ well_width_c*9
+RED_BG_COLOR	equ $24
+ORANGE_BG_COLOR	equ $26
+YELLOW_BG_COLOR	equ $36
+GREEN_BG_COLOR	equ $12
+BG_PALETTE_SLOT equ $ffb4
+BORDER_REG	equ	$ff9a
+
+
 seed_start_c	equ 11
 seed_inc_c	equ seed_start_c+1
 
